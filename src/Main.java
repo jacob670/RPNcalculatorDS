@@ -48,12 +48,12 @@ public class Main {
                 operators.pop();
 
             } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^' || ch == '%') {
-
-                if (ch == '/' && expression.charAt(i+1) == '/') {
-                    if (expression.charAt(i + 1) == '/') {
-                        System.out.println("integer divison");
-                        operators.push("//")
-                    }
+                // reads the next character ahead -> '//' represent integer division in expression
+                // saves the $ symbol as integer division (having no remainder) because stack is char based and not string based
+                if (ch == '/' && i + 1 < expression.length() && expression.charAt(i+1) == '/') {
+                    operators.push('$');
+                    System.out.println(operators);
+                    i++;
                 } else {
 
                     System.out.println("Opposite of isStackEmpty?: " + !operators.isEmpty());
@@ -73,23 +73,6 @@ public class Main {
                     }
                     operators.push(ch);
                 }
-
-//                System.out.println("Opposite of isStackEmpty?: " + !operators.isEmpty());
-//                System.out.println();
-//
-//                // checks precedence when the stack is building up, then pushes new values
-//                while (!operators.isEmpty() && hasPrecedence(ch, operators.peek())) {
-//                    System.out.println("CHECKING THE PRECEDENCE IN LOOP for " + ch + " vs. " + operators.peek() + " and value is " + hasPrecedence(ch, operators.peek()));
-//                    System.out.println();
-//
-//                    System.out.println(values);
-//                    System.out.println(operators);
-//                    values.push(applyOperator(operators.pop(), values.pop(), values.pop()));
-//
-//                    System.out.println(values);
-//                    System.out.println(operators);
-//                }
-//                operators.push(ch);
             }
         }
 
@@ -103,7 +86,7 @@ public class Main {
                 System.out.println("Final operators: " + operators);
                 double rightOperand = values.pop();
                 double leftOperand = values.pop();
-                values.push(applyOperator(operators.pop(), leftOperand, rightOperand));
+                values.push(applyOperator(operators.pop(), rightOperand, leftOperand));
             }
 
         }
@@ -113,6 +96,7 @@ public class Main {
 
 
     private static boolean hasPrecedence(char op1, char op2) {
+
         if (op2 == '(' || op2 == ')') {
             return false;
         }
@@ -120,10 +104,13 @@ public class Main {
             return op2 != '^';
         }
 
-        return (op1 != '*' && op1 != '/' && op1 != '%') || (op2 != '+' && op2 != '-');
+        return (op1 != '*' && op1 != '/' && op1 != '%' && op1 != '$') || (op2 != '+' && op2 != '-');
     }
 
     private static double applyOperator(char operator, double a, double b) {
+        int integerA = (int) Math.round(a);
+        int integerB = (int) Math.round(b);
+
         switch (operator) {
             case '+':
                 return a + b;
@@ -135,12 +122,16 @@ public class Main {
                 if (b == 0) {
                     throw new ArithmeticException("Division by zero");
                 }
-                return a / b;
+                return b / a;
             case '^':
                 return Math.pow(a, b);
             case '%':
                 // values are switched around on stack, messes up mod -> a mod b instead of b mod a
                 return b % a;
+            case '$':
+                System.out.println(integerA);
+                System.out.println(integerB);
+                return integerB / integerA;
             default:
                 return 0;
         }
