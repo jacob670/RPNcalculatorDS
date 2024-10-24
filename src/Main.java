@@ -5,16 +5,20 @@ public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        System.out.print("Enter an expression: ");
-        String expression = scanner.nextLine();
+        boolean testing = true;
+        while (testing) {
+            System.out.print("Enter an expression: ");
+            String expression = scanner.nextLine();
 
 
-        try {
-            double result = evaluateExpression(expression);
-            System.out.println("Result: " + result);
-        } catch (Exception e) {
-            System.out.println("Invalid expression: " + e.getMessage());
+            try {
+                double result = evaluateExpression(expression);
+                System.out.println("Result: " + result);
+            } catch (Exception e) {
+                System.out.println("Invalid expression: " + e.getMessage());
+            }
         }
+
     }
 
     private static double evaluateExpression(String expression) {
@@ -50,7 +54,7 @@ public class Main {
             } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^' || ch == '%') {
                 // reads the next character ahead -> '//' represent integer division in expression
                 // saves the $ symbol as integer division (having no remainder) because stack is char based and not string based
-                if (ch == '/' && i + 1 < expression.length() && expression.charAt(i+1) == '/') {
+                if (ch == '/' && expression.charAt(i+1) == '/') {
                     operators.push('$');
                     System.out.println(operators);
                     i++;
@@ -64,8 +68,8 @@ public class Main {
                         System.out.println("CHECKING THE PRECEDENCE IN LOOP for " + ch + " vs. " + operators.peek() + " and value is " + hasPrecedence(ch, operators.peek()));
                         System.out.println();
 
-                        System.out.println(values);
-                        System.out.println(operators);
+                        System.out.println("Current values: " + values);
+                        System.out.println("Current operators: " + operators);
                         values.push(applyOperator(operators.pop(), values.pop(), values.pop()));
 
                         System.out.println(values);
@@ -73,6 +77,34 @@ public class Main {
                     }
                     operators.push(ch);
                 }
+            } else if (ch == 's' || ch == 'c' || ch == 't') {
+                if (ch == 's' && expression.charAt(i + 1) == 'i' && expression.charAt(i + 2) == 'n') {
+                    System.out.println("sin");
+                    operators.push('s');
+                    i+=2;
+                } else if (ch == 'c' && expression.charAt(i + 1) == 'o' && expression.charAt(i + 2) == 's') {
+                    System.out.println("cos");
+                    operators.push('c');
+                    i += 2;
+                } else if (ch == 't' && expression.charAt(i + 1) == 'a' && expression.charAt(i + 2) == 'n') {
+                    System.out.println("tan");
+                    operators.push('t');
+                    i += 2;
+                }
+
+//                while (!operators.isEmpty() && hasPrecedence(ch, operators.peek())) {
+//                    System.out.println("CHECKING THE PRECEDENCE IN LOOP for " + ch + " vs. " + operators.peek() + " and value is " + hasPrecedence(ch, operators.peek()));
+//                    System.out.println();
+//
+//                    System.out.println("Current values: " + values);
+//                    System.out.println("Current operators: " + operators);
+//                    values.push(applyTrigOperators(operators.pop(), values.pop()));
+//
+//                    System.out.println(values);
+//                    System.out.println(operators);
+//                }
+               // operators.push(ch);
+
             }
         }
 
@@ -81,7 +113,12 @@ public class Main {
                 double exponent = values.pop();
                 double base = values.pop();
                 values.push(applyOperator(operators.pop(), base, exponent));
-            } else {
+            } else if (operators.peek() == 's' || operators.peek() == 'c' || operators.peek() == 't') {
+                System.out.println("Final values: " + values);
+                System.out.println("Final operators: " + operators);
+                values.push(applyTrigOperators(operators.pop(), values.pop()));
+            }
+            else {
                 System.out.println("Final values: " + values);
                 System.out.println("Final operators: " + operators);
                 double rightOperand = values.pop();
@@ -94,44 +131,86 @@ public class Main {
         return values.pop();
     }
 
-
     private static boolean hasPrecedence(char op1, char op2) {
+        // # *+-/ trig function works
+        // trig function +-/* # does not work thinks expression is null
+
 
         if (op2 == '(' || op2 == ')') {
             return false;
         }
-        if (op1 == '^') {
-            return op2 != '^';
+        if (op2 == '^') {
+            return true;
         }
 
-        return (op1 != '*' && op1 != '/' && op1 != '%' && op1 != '$') || (op2 != '+' && op2 != '-');
+        if ( op2 == 's' || op2 == 'c' || op2 == 't') {
+            return true;
+        }
+        if (op2 == '*' || op2 == '/' || op2 == '%' || op2 == '$') {
+            return op1 != '+' && op1 != '-';
+        }
+
+        return false;
+
+//        return op1 == 's' || op1 == 'c' || op1 == 't';
+
+
+
+
+
+
+//        if (op2 == '(' || op2 == ')') {
+//            return false;
+//        }
+//        if (op2 == '^') {
+//            return true;
+//        }
+//        if (op1 == '*' || op1 == '/' || op1 == '%' || op1 == '$') {
+//            return op2 != '+' && op2 != '-';
+//        }
+//
+//        if (op1 == '+' || op1 == '-') {
+//            return false;
+//        }
+//
+//        return op1 == 's' || op1 == 'c' || op1 == 't';
+
+
     }
 
     private static double applyOperator(char operator, double a, double b) {
-        int integerA = (int) Math.round(a);
-        int integerB = (int) Math.round(b);
-
         switch (operator) {
             case '+':
-                return a + b;
+                return b + a;
             case '-':
-                return a - b;
+                return b - a;
             case '*':
-                return a * b;
+                return b * a;
             case '/':
                 if (b == 0) {
                     throw new ArithmeticException("Division by zero");
                 }
                 return b / a;
             case '^':
-                return Math.pow(a, b);
+                return Math.pow(b, a);
             case '%':
                 // values are switched around on stack, messes up mod -> a mod b instead of b mod a
                 return b % a;
             case '$':
-                System.out.println(integerA);
-                System.out.println(integerB);
-                return integerB / integerA;
+                return Math.floor(b/a);
+            default:
+                return 0;
+        }
+    }
+
+    private static double applyTrigOperators(char operator, double value) {
+        switch (operator) {
+            case 's':
+                return Math.sin(value);
+            case 'c':
+                return Math.cos(value);
+            case 't':
+                return Math.tan(value);
             default:
                 return 0;
         }
