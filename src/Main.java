@@ -9,7 +9,6 @@ public class Main {
             System.out.print("Enter an expression: ");
             String expression = scanner.nextLine();
 
-
             try {
                 double result = evaluateExpression(expression);
                 System.out.println("Result: " + result);
@@ -53,18 +52,13 @@ public class Main {
                 }
                 operators.pop();
 
-            } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^' || ch == '%') {
-                // reads the next character ahead -> '//' represent integer division in expression
+            } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^' || ch == '%' || ch == '\\') {
+                // reads the next character ahead -> '\\' represent integer division in expression
                 // saves the $ symbol as integer division (having no remainder) because stack is char based and not string based
-                if (ch == '/' && expression.charAt(i + 1) == '/') {
+                if (ch == '\\' && i + 1 < expression.length() && expression.charAt(i + 1) == '\\' ) {
                     operators.push('$');
-                    System.out.println(operators);
                     i++;
                 } else {
-
-                    System.out.println("Opposite of isStackEmpty?: " + !operators.isEmpty());
-                    System.out.println();
-
                     // checks precedence when the stack is building up, then pushes new values
                     while (!operators.isEmpty() && hasPrecedence(ch, operators.peek())) {
                         System.out.println("CHECKING THE PRECEDENCE IN LOOP for " + ch + " vs. " + operators.peek() + " and value is " + hasPrecedence(ch, operators.peek()));
@@ -79,17 +73,12 @@ public class Main {
                     }
                     operators.push(ch);
                 }
-            } else if (trigCharacters.contains(ch)) {
-                char trigFunc = Character.toUpperCase(ch);
-                if (trigFunc == 'S') {
-                    operators.push('s');
-                } else if (trigFunc == 'C') {
-                    operators.push('c');
-                } else if (trigFunc == 'T') {
-                    operators.push('t');
-                }
 
-                // Here we expect the next token to be a number
+            } else if (trigCharacters.contains(ch)) {
+
+                char trigFunc = Character.toLowerCase(ch);
+                operators.push(trigFunc);
+
                 if (i + 1 < expression.length() && Character.isDigit(expression.charAt(i + 1))) {
                     i++;
                     StringBuilder num = new StringBuilder();
@@ -98,26 +87,21 @@ public class Main {
                     }
                     i--;
                     double val = Double.parseDouble(num.toString());
-                    // Push the result of the trig function directly
                     values.push(applyTrigOperators(trigFunc, val));
+
+                    operators.pop();
                 }
-//                while (!operators.isEmpty() && hasPrecedence(ch, operators.peek())) {
-//                    System.out.println("CHECKING THE PRECEDENCE IN LOOP for " + ch + " vs. " + operators.peek() + " and value is " + hasPrecedence(ch, operators.peek()));
-//                    System.out.println();
-//
-//                    System.out.println("Current values: " + values);
-//                    System.out.println("Current operators: " + operators);
-//                    values.push(applyTrigOperators(operators.pop(), values.pop()));
-//
-//                    System.out.println(values);
-//                    System.out.println(operators);
-//                }
-                // operators.push(ch);
             } else if (ch == 'N') {
-                if (i + 1 < expression.length() && (Character.isDigit(expression.charAt(i + 1)))) {
+                if (i + 1 < expression.length() && Character.isDigit(expression.charAt(i + 1))) {
+                    // skip the N char and move to the first digit
                     i++;
-                    String conversion = String.valueOf(expression.charAt(i));
-                    Double val = Double.parseDouble(conversion);
+                    StringBuilder num = new StringBuilder();
+
+                    while (i < expression.length() && (Character.isDigit(expression.charAt(i)) || expression.charAt(i) == '.')) {
+                        num.append(expression.charAt(i++));
+                    }
+                    i--;
+                    double val = Double.parseDouble(num.toString());
                     val *= -1;
                     values.push(val);
                 }
@@ -129,11 +113,6 @@ public class Main {
                 double exponent = values.pop();
                 double base = values.pop();
                 values.push(applyOperator(operators.pop(), base, exponent));
-            }
-            else if (operators.peek() == 's' || operators.peek() == 'c' || operators.peek() == 't') {
-                System.out.println("Final values: " + values);
-                System.out.println("Final operators: " + operators);
-                values.push(applyTrigOperators(operators.pop(), values.pop()));
             }
             else {
                 System.out.println("Final values: " + values);
@@ -149,9 +128,6 @@ public class Main {
     }
 
     private static boolean hasPrecedence(char op1, char op2) {
-        // # *+-/ trig function works
-        // trig function +-/* # does not work thinks expression is null
-
         if (op2 == '(' || op2 == ')') {
             return false;
         }
@@ -162,36 +138,12 @@ public class Main {
         if ( op2 == 's' || op2 == 'c' || op2 == 't') {
             return true;
         }
+
         if (op2 == '*' || op2 == '/' || op2 == '%' || op2 == '$') {
             return op1 != '+' && op1 != '-';
         }
 
         return false;
-
-        //return op1 == 's' || op1 == 'c' || op1 == 't';
-
-
-
-
-
-
-//        if (op2 == '(' || op2 == ')') {
-//            return false;
-//        }
-//        if (op2 == '^') {
-//            return true;
-//        }
-//        if (op1 == '*' || op1 == '/' || op1 == '%' || op1 == '$') {
-//            return op2 != '+' && op2 != '-';
-//        }
-//
-//        if (op1 == '+' || op1 == '-') {
-//            return false;
-//        }
-//
-//        return op1 == 's' || op1 == 'c' || op1 == 't';
-
-
     }
 
     private static double applyOperator(char operator, double a, double b) {
