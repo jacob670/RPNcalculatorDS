@@ -2,21 +2,25 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
+        /* RPN Calculator
+        * Enter ^ for exponents
+        * Enter % for modulus operator and '\\' for integer division
+        * Enter N for negative integers or numbers
+        * Enter S, C, T for trig functions representing sin, cos, tan
+        * Example Expressions: S30+C30; 10+N7; 3^5-124*3; 10\\3; 100%13;
+        * */
+
         Scanner scanner = new Scanner(System.in);
 
-        boolean testing = true;
-        while (testing) {
-            System.out.print("Enter an expression: ");
-            String expression = scanner.nextLine();
+        System.out.print("Enter an expression: ");
+        String expression = scanner.nextLine();
 
-            try {
-                double result = evaluateExpression(expression);
-                System.out.println("Result: " + result);
-            } catch (Exception e) {
-                System.out.println("Invalid expression: " + e.getMessage());
-            }
+        try {
+            double result = evaluateExpression(expression);
+            System.out.println("Result: " + result);
+        } catch (Exception e) {
+            System.out.println("Invalid expression: " + e.getMessage());
         }
-
     }
 
     private static double evaluateExpression(String expression) {
@@ -61,21 +65,12 @@ public class Main {
                 } else {
                     // checks precedence when the stack is building up, then pushes new values
                     while (!operators.isEmpty() && hasPrecedence(ch, operators.peek())) {
-                        System.out.println("CHECKING THE PRECEDENCE IN LOOP for " + ch + " vs. " + operators.peek() + " and value is " + hasPrecedence(ch, operators.peek()));
-                        System.out.println();
-
-                        System.out.println("Current values: " + values);
-                        System.out.println("Current operators: " + operators);
                         values.push(applyOperator(operators.pop(), values.pop(), values.pop()));
-
-                        System.out.println(values);
-                        System.out.println(operators);
                     }
                     operators.push(ch);
                 }
 
             } else if (trigCharacters.contains(ch)) {
-
                 char trigFunc = Character.toLowerCase(ch);
                 operators.push(trigFunc);
 
@@ -93,14 +88,15 @@ public class Main {
                 }
             } else if (ch == 'N') {
                 if (i + 1 < expression.length() && Character.isDigit(expression.charAt(i + 1))) {
-                    // skip the N char and move to the first digit
+                    // Probably could have implemented some type of function to reduce code
+                    // How it builds the trig values is the same as the N values for using StringBuilder. Could have used method but bugs
                     i++;
                     StringBuilder num = new StringBuilder();
-
                     while (i < expression.length() && (Character.isDigit(expression.charAt(i)) || expression.charAt(i) == '.')) {
                         num.append(expression.charAt(i++));
                     }
                     i--;
+
                     double val = Double.parseDouble(num.toString());
                     val *= -1;
                     values.push(val);
@@ -115,16 +111,32 @@ public class Main {
                 values.push(applyOperator(operators.pop(), base, exponent));
             }
             else {
-                System.out.println("Final values: " + values);
-                System.out.println("Final operators: " + operators);
                 double rightOperand = values.pop();
                 double leftOperand = values.pop();
                 values.push(applyOperator(operators.pop(), rightOperand, leftOperand));
             }
 
         }
-        System.out.println("Final return value: " + values.peek());
         return values.pop();
+    }
+
+    private static double buildValue(int i, String expression, boolean isNegative) {
+        /* This method was not used in the final production of the code
+        * It would have been added to reduce the code and make readability better
+        * Could not figure out a small bug when testing the function
+        * */
+        StringBuilder num = new StringBuilder();
+
+        while (i < expression.length() && (Character.isDigit(expression.charAt(i)) || expression.charAt(i) == '.')) {
+            num.append(expression.charAt(i++));
+        }
+        double val = Double.parseDouble(num.toString());
+
+        if (isNegative) {
+            return -val;
+        } else {
+            return val;
+        }
     }
 
     private static boolean hasPrecedence(char op1, char op2) {
@@ -134,15 +146,12 @@ public class Main {
         if (op2 == '^') {
             return true;
         }
-
         if ( op2 == 's' || op2 == 'c' || op2 == 't') {
             return true;
         }
-
         if (op2 == '*' || op2 == '/' || op2 == '%' || op2 == '$') {
             return op1 != '+' && op1 != '-';
         }
-
         return false;
     }
 
