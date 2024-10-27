@@ -1,5 +1,4 @@
-import java.util.Scanner;
-import java.util.Stack;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -24,6 +23,9 @@ public class Main {
     private static double evaluateExpression(String expression) {
         Stack<Double> values = new Stack<>();
         Stack<Character> operators = new Stack<>();
+
+        // easier to check and read. just call .contains if user inputs trig function
+        List<Character> trigCharacters = Arrays.asList('s', 'c', 't', 'S', 'C', 'T');
 
         // length of expression
         for (int i = 0; i < expression.length(); i++) {
@@ -54,7 +56,7 @@ public class Main {
             } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^' || ch == '%') {
                 // reads the next character ahead -> '//' represent integer division in expression
                 // saves the $ symbol as integer division (having no remainder) because stack is char based and not string based
-                if (ch == '/' && expression.charAt(i+1) == '/') {
+                if (ch == '/' && expression.charAt(i + 1) == '/') {
                     operators.push('$');
                     System.out.println(operators);
                     i++;
@@ -77,21 +79,28 @@ public class Main {
                     }
                     operators.push(ch);
                 }
-            } else if (ch == 's' || ch == 'c' || ch == 't') {
-                if (ch == 's' && expression.charAt(i + 1) == 'i' && expression.charAt(i + 2) == 'n') {
-                    System.out.println("sin");
+            } else if (trigCharacters.contains(ch)) {
+                char trigFunc = Character.toUpperCase(ch);
+                if (trigFunc == 'S') {
                     operators.push('s');
-                    i+=2;
-                } else if (ch == 'c' && expression.charAt(i + 1) == 'o' && expression.charAt(i + 2) == 's') {
-                    System.out.println("cos");
+                } else if (trigFunc == 'C') {
                     operators.push('c');
-                    i += 2;
-                } else if (ch == 't' && expression.charAt(i + 1) == 'a' && expression.charAt(i + 2) == 'n') {
-                    System.out.println("tan");
+                } else if (trigFunc == 'T') {
                     operators.push('t');
-                    i += 2;
                 }
 
+                // Here we expect the next token to be a number
+                if (i + 1 < expression.length() && Character.isDigit(expression.charAt(i + 1))) {
+                    i++;
+                    StringBuilder num = new StringBuilder();
+                    while (i < expression.length() && (Character.isDigit(expression.charAt(i)) || expression.charAt(i) == '.')) {
+                        num.append(expression.charAt(i++));
+                    }
+                    i--;
+                    double val = Double.parseDouble(num.toString());
+                    // Push the result of the trig function directly
+                    values.push(applyTrigOperators(trigFunc, val));
+                }
 //                while (!operators.isEmpty() && hasPrecedence(ch, operators.peek())) {
 //                    System.out.println("CHECKING THE PRECEDENCE IN LOOP for " + ch + " vs. " + operators.peek() + " and value is " + hasPrecedence(ch, operators.peek()));
 //                    System.out.println();
@@ -103,8 +112,15 @@ public class Main {
 //                    System.out.println(values);
 //                    System.out.println(operators);
 //                }
-               // operators.push(ch);
-
+                // operators.push(ch);
+            } else if (ch == 'N') {
+                if (i + 1 < expression.length() && (Character.isDigit(expression.charAt(i + 1)))) {
+                    i++;
+                    String conversion = String.valueOf(expression.charAt(i));
+                    Double val = Double.parseDouble(conversion);
+                    val *= -1;
+                    values.push(val);
+                }
             }
         }
 
@@ -113,7 +129,8 @@ public class Main {
                 double exponent = values.pop();
                 double base = values.pop();
                 values.push(applyOperator(operators.pop(), base, exponent));
-            } else if (operators.peek() == 's' || operators.peek() == 'c' || operators.peek() == 't') {
+            }
+            else if (operators.peek() == 's' || operators.peek() == 'c' || operators.peek() == 't') {
                 System.out.println("Final values: " + values);
                 System.out.println("Final operators: " + operators);
                 values.push(applyTrigOperators(operators.pop(), values.pop()));
@@ -135,7 +152,6 @@ public class Main {
         // # *+-/ trig function works
         // trig function +-/* # does not work thinks expression is null
 
-
         if (op2 == '(' || op2 == ')') {
             return false;
         }
@@ -152,7 +168,7 @@ public class Main {
 
         return false;
 
-//        return op1 == 's' || op1 == 'c' || op1 == 't';
+        //return op1 == 's' || op1 == 'c' || op1 == 't';
 
 
 
